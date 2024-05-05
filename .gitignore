@@ -1,0 +1,17 @@
+# for python
+.venv*/
+__pycache__/
+
+# for project
+.vscode/
+*sample.py
+*.json
+test/
+
+# for pyinstaller
+dist/
+build/
+*.spec
+
+# for selenium
+user_data/

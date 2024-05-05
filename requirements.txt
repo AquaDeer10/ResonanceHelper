@@ -1,0 +1,6 @@
+paddlepaddle==2.6.1
+paddleocr==2.7.3
+# pyinstaller 6.0.0+ with -w or --noconsole option will detected as a virus by windows defender
+pyinstaller<6.0.0
+selenium==4.20.0
+pystray==0.19.5
