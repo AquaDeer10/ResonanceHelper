@@ -17,6 +17,10 @@ class Application:
     def __init__(self, master: tk.Tk):
         self.master = master
 
+        # console 重定向
+        sys.stdout = self
+        sys.stderr = self
+
         # 游戏相关数据初始化
         self.src = tk.StringVar()
         self.dst = tk.StringVar()
@@ -110,10 +114,6 @@ class Application:
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.log.pack()
-
-        # console 重定向
-        sys.stdout = self
-        sys.stderr = self
 
         # 子线程相关
         self.helper_event = threading.Event()
