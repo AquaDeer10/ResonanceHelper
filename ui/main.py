@@ -11,6 +11,7 @@ from . import statics
 import os
 from PIL import Image
 import pystray
+import webbrowser
 
 class Application:
     def __init__(self, master: tk.Tk):
@@ -51,6 +52,30 @@ class Application:
         self.main_frame = ttk.Frame(self.master)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
+        # 项目链接 https://github.com/AquaDeer10/ResonanceHelper
+        project_label = ttk.Label(
+            self.main_frame,
+            text="Github: ResonanceHelper",
+            cursor="hand2",
+            foreground="black"
+        )
+        project_label.bind(
+            "<Button-1>", 
+            lambda _: webbrowser.open("https://github.com/AquaDeer10/ResonanceHelper"))
+        project_label.bind(
+            "<Enter>", 
+            lambda _: project_label.config(foreground="blue")
+        )
+        project_label.bind(
+            "<Leave>", 
+            lambda _: project_label.config(foreground="black")
+        )
+        project_label.pack(side=tk.BOTTOM, anchor=tk.E)
+
+
+
+
+        # 上下框架
         self.up_frame = ttk.Frame(self.main_frame)
         self.up_frame.pack()
         self.down_frame = ttk.Frame(self.main_frame)
@@ -550,5 +575,4 @@ class Application:
 
     def show(self):
         self.master.deiconify()
-
 
