@@ -13,11 +13,9 @@ class Scene:
     scene_list: t.List['Scene'] = []
 
     def __init__(self, 
-                 id: int, 
                  name: str, 
                  site: Site, 
                  ) -> None:
-        self.id = id
         self.name = name
         self._next_scenes: t.Dict[Scene, t.Union[Action, Rail]]  = {}
         self.site: Site = site
@@ -54,38 +52,34 @@ class Scene:
     
 class MainScene(Scene):
     def __init__(self, 
-                 id: int, 
                  name: str, 
                  site: Site
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
 
 
 class UrbanScene(Scene):
-    def __init__(self, 
-                 id: int, 
+    def __init__(self,
                  name: str, 
                  site: Site,
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
 
 class CRBSEScene(Scene):
-    def __init__(self, 
-                 id: int, 
+    def __init__(self,  
                  name: str, 
                  site: Site,
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
 class ExpulsionTaskScene(Scene):
-    def __init__(self, 
-                 id: int, 
+    def __init__(self,  
                  name: str, 
                  site: Site,
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
     def choose(self, task_number: int) -> Action:
         if task_number not in [1, 2, 3]:
@@ -110,11 +104,10 @@ class ExpulsionTaskScene(Scene):
 
 class ExchangeScene(Scene):
     def __init__(self, 
-                 id: int, 
                  name: str, 
                  site: Site,
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
 
     def exchange_price(self) -> Action:
@@ -131,12 +124,11 @@ class ExchangeScene(Scene):
     
 
 class ExchangeBuyScene(ExchangeScene):
-    def __init__(self, 
-                 id: int, 
+    def __init__(self,  
                  name: str, 
                  site: Site,
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
     def select_item(self, item_list: t.List[str], image_bytes: bytes) -> Action:
         image = Image.open(BytesIO(image_bytes))
@@ -196,11 +188,10 @@ class ExchangeBuyScene(ExchangeScene):
         
 class ExchangeSellScene(ExchangeScene):
     def __init__(self, 
-                 id: int, 
                  name: str, 
                  site: Site,
                  ) -> None:
-        super().__init__(id, name, site)
+        super().__init__(name, site)
 
     def select_item(self, num: int) -> Action:
         action_chain = action()
@@ -259,16 +250,16 @@ class ExchangeSellScene(ExchangeScene):
     
     
 # -----------------主界面场景-----------------
-shoggolith_city_main = MainScene(1, "修格里城主界面", Site.SHOGGOLITH_CITY)
-brcl_outpost = MainScene(2, "铁盟哨站主界面", Site.BRCL_OUTPOST)
-mander_mine = MainScene(3, "曼德矿场主界面", Site.MANDER_MINE)
-wilderness_station = MainScene(4, "荒原站主界面", Site.WILDERNESS_STATION)
-onederland = MainScene(5, "淘金乐园主界面", Site.ONEDERLANND)
-clarity_data_center = MainScene(6, "澄明数据中心主界面", Site.CLARITY_DATA_CENTER)
-freeport_vii = MainScene(7, "7号自由港主界面", Site.FREEPORT_VII)
-anita_weapon_research_institute = MainScene(8, "阿妮塔战备工厂主界面", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
-anita_energy_research_institute = MainScene(9, "阿妮塔能源研究所主界面", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
-anita_rocket_base = MainScene(12, "阿妮塔发射中心主界面", Site.ANITA_ROCKET_BASE)
+shoggolith_city_main = MainScene("修格里城主界面", Site.SHOGGOLITH_CITY)
+brcl_outpost = MainScene("铁盟哨站主界面", Site.BRCL_OUTPOST)
+mander_mine = MainScene("曼德矿场主界面", Site.MANDER_MINE)
+wilderness_station = MainScene("荒原站主界面", Site.WILDERNESS_STATION)
+onederland = MainScene("淘金乐园主界面", Site.ONEDERLANND)
+clarity_data_center = MainScene("澄明数据中心主界面", Site.CLARITY_DATA_CENTER)
+freeport_vii = MainScene("7号自由港主界面", Site.FREEPORT_VII)
+anita_weapon_research_institute = MainScene("阿妮塔战备工厂主界面", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
+anita_energy_research_institute = MainScene("阿妮塔能源研究所主界面", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
+anita_rocket_base = MainScene("阿妮塔发射中心主界面", Site.ANITA_ROCKET_BASE)
 
 
 main_scenes = [
@@ -287,16 +278,16 @@ for main_scene in main_scenes:
 
 
 # -----------------市区场景-----------------
-shoggolith_city_urban = UrbanScene(12, "修格里城市区", Site.SHOGGOLITH_CITY)
-brcl_outpost_urban = UrbanScene(13, "铁盟哨站市区", Site.BRCL_OUTPOST)
-mander_mine_urban = UrbanScene(14, "曼德矿场市区", Site.MANDER_MINE)
-wilderness_station_urban = UrbanScene(15, "荒原站市区", Site.WILDERNESS_STATION)
-onederland_urban = UrbanScene(16, "淘金乐园市区", Site.ONEDERLANND)
-clarity_data_center_urban = UrbanScene(17, "澄明数据中心市区", Site.CLARITY_DATA_CENTER)
-freeport_vii_urban = UrbanScene(18, "7号自由港市区", Site.FREEPORT_VII)
-anita_weapon_research_institute_urban = UrbanScene(19, "阿妮塔战备工厂市区", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
-anita_energy_research_institute_urban = UrbanScene(20, "阿妮塔能源研究所市区", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
-anita_rocket_base_urban = UrbanScene(23, "阿妮塔发射中心市区", Site.ANITA_ROCKET_BASE)
+shoggolith_city_urban = UrbanScene("修格里城市区", Site.SHOGGOLITH_CITY)
+brcl_outpost_urban = UrbanScene("铁盟哨站市区", Site.BRCL_OUTPOST)
+mander_mine_urban = UrbanScene("曼德矿场市区", Site.MANDER_MINE)
+wilderness_station_urban = UrbanScene("荒原站市区", Site.WILDERNESS_STATION)
+onederland_urban = UrbanScene("淘金乐园市区", Site.ONEDERLANND)
+clarity_data_center_urban = UrbanScene("澄明数据中心市区", Site.CLARITY_DATA_CENTER)
+freeport_vii_urban = UrbanScene("7号自由港市区", Site.FREEPORT_VII)
+anita_weapon_research_institute_urban = UrbanScene("阿妮塔战备工厂市区", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
+anita_energy_research_institute_urban = UrbanScene("阿妮塔能源研究所市区", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
+anita_rocket_base_urban = UrbanScene("阿妮塔发射中心市区", Site.ANITA_ROCKET_BASE)
 
 urban_scenes = [
     shoggolith_city_urban, brcl_outpost_urban, mander_mine_urban, wilderness_station_urban,
@@ -314,10 +305,10 @@ for main_scene in main_scenes:
 
 
 # -----------------铁安局场景-----------------
-shoggolith_city_crbse = CRBSEScene(23, "修格里城铁安局", Site.SHOGGOLITH_CITY)
-mander_mine_crbse = CRBSEScene(24, "曼德矿场铁安局", Site.MANDER_MINE)
-clarity_data_center_crbse = CRBSEScene(24, "澄明数据中心铁安局", Site.CLARITY_DATA_CENTER)
-freeport_vii_crbse = CRBSEScene(24, "7号自由港铁安局", Site.FREEPORT_VII)
+shoggolith_city_crbse = CRBSEScene("修格里城铁安局", Site.SHOGGOLITH_CITY)
+mander_mine_crbse = CRBSEScene("曼德矿场铁安局", Site.MANDER_MINE)
+clarity_data_center_crbse = CRBSEScene("澄明数据中心铁安局", Site.CLARITY_DATA_CENTER)
+freeport_vii_crbse = CRBSEScene("7号自由港铁安局", Site.FREEPORT_VII)
 
 crbse_scenes = [
     shoggolith_city_crbse, mander_mine_crbse, 
@@ -338,10 +329,10 @@ for crbse_scene in crbse_scenes:
 
 
 # -----------------驱逐任务场景-----------------
-shoggolith_city_expulsion_task = ExpulsionTaskScene(24, "修格里城驱逐任务", Site.SHOGGOLITH_CITY)
-mander_mine_expulsion_task = ExpulsionTaskScene(25, "曼德矿场驱逐任务", Site.MANDER_MINE)
-clarity_data_center_expulsion_task = ExpulsionTaskScene(25, "澄明数据中心驱逐任务", Site.CLARITY_DATA_CENTER)
-freeport_vii_expulsion_task = ExpulsionTaskScene(25, "7号自由港驱逐任务", Site.FREEPORT_VII)
+shoggolith_city_expulsion_task = ExpulsionTaskScene("修格里城驱逐任务", Site.SHOGGOLITH_CITY)
+mander_mine_expulsion_task = ExpulsionTaskScene("曼德矿场驱逐任务", Site.MANDER_MINE)
+clarity_data_center_expulsion_task = ExpulsionTaskScene("澄明数据中心驱逐任务", Site.CLARITY_DATA_CENTER)
+freeport_vii_expulsion_task = ExpulsionTaskScene("7号自由港驱逐任务", Site.FREEPORT_VII)
 
 expulsion_task_scenes = [
     shoggolith_city_expulsion_task, mander_mine_expulsion_task,
@@ -359,16 +350,16 @@ for crbse_scene in crbse_scenes:
 
 
 # -------------------交易所场景-----------------
-shoggolith_city_exchange = ExchangeScene(24, "修格里城交易所", Site.SHOGGOLITH_CITY)
-brcl_outpost_exchange = ExchangeScene(25, "铁盟哨站交易所", Site.BRCL_OUTPOST)
-mander_mine_exchange = ExchangeScene(25, "曼德矿场交易所", Site.MANDER_MINE)
-wilderness_station_exchange = ExchangeScene(25, "荒原站交易所", Site.WILDERNESS_STATION)
-onederland_exchange = ExchangeScene(26, "淘金乐园交易所", Site.ONEDERLANND)
-clarity_data_center_exchange = ExchangeScene(27, "澄明数据中心交易所", Site.CLARITY_DATA_CENTER)
-freeport_vii_exchange = ExchangeScene(27, "7号自由港交易所", Site.FREEPORT_VII)
-anita_weapon_research_institute_exchange = ExchangeScene(27, "阿妮塔战备工厂交易所", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
-anita_energy_research_institute_exchange = ExchangeScene(27, "阿妮塔能源研究所交易所", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
-anita_rocket_base_exchange = ExchangeScene(27, "阿妮塔发射中心交易所", Site.ANITA_ROCKET_BASE)
+shoggolith_city_exchange = ExchangeScene("修格里城交易所", Site.SHOGGOLITH_CITY)
+brcl_outpost_exchange = ExchangeScene("铁盟哨站交易所", Site.BRCL_OUTPOST)
+mander_mine_exchange = ExchangeScene("曼德矿场交易所", Site.MANDER_MINE)
+wilderness_station_exchange = ExchangeScene("荒原站交易所", Site.WILDERNESS_STATION)
+onederland_exchange = ExchangeScene("淘金乐园交易所", Site.ONEDERLANND)
+clarity_data_center_exchange = ExchangeScene("澄明数据中心交易所", Site.CLARITY_DATA_CENTER)
+freeport_vii_exchange = ExchangeScene("7号自由港交易所", Site.FREEPORT_VII)
+anita_weapon_research_institute_exchange = ExchangeScene("阿妮塔战备工厂交易所", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
+anita_energy_research_institute_exchange = ExchangeScene("阿妮塔能源研究所交易所", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
+anita_rocket_base_exchange = ExchangeScene("阿妮塔发射中心交易所", Site.ANITA_ROCKET_BASE)
 
 
 exchange_scenes = [
@@ -400,16 +391,16 @@ for exchange_scene in exchange_scenes:
 
 
 # -----------------交易所购买场景-----------------
-shoggolith_city_exchange_buy = ExchangeBuyScene(28, "修格里城交易所购买", Site.SHOGGOLITH_CITY)
-brcl_outpost_exchange_buy = ExchangeBuyScene(28, "铁盟哨站交易所购买", Site.BRCL_OUTPOST)
-mander_mine_exchange_buy = ExchangeBuyScene(28, "曼德矿场交易所购买", Site.MANDER_MINE)
-wilderness_station_exchange_buy = ExchangeBuyScene(28, "荒原站交易所购买", Site.WILDERNESS_STATION)
-onederland_exchange_buy = ExchangeBuyScene(28, "淘金乐园交易所购买", Site.ONEDERLANND)
-clarity_data_center_exchange_buy = ExchangeBuyScene(28, "澄明数据中心交易所购买", Site.CLARITY_DATA_CENTER)
-freeport_vii_exchange_buy = ExchangeBuyScene(28, "7号自由港交易所购买", Site.FREEPORT_VII)
-anita_weapon_research_institute_exchange_buy = ExchangeBuyScene(28, "阿妮塔战备工厂交易所购买", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
-anita_energy_research_institute_exchange_buy = ExchangeBuyScene(28, "阿妮塔能源研究所交易所购买", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
-anita_rocket_base_exchange_buy = ExchangeBuyScene(28, "阿妮塔发射中心交易所购买", Site.ANITA_ROCKET_BASE)
+shoggolith_city_exchange_buy = ExchangeBuyScene("修格里城交易所购买", Site.SHOGGOLITH_CITY)
+brcl_outpost_exchange_buy = ExchangeBuyScene("铁盟哨站交易所购买", Site.BRCL_OUTPOST)
+mander_mine_exchange_buy = ExchangeBuyScene("曼德矿场交易所购买", Site.MANDER_MINE)
+wilderness_station_exchange_buy = ExchangeBuyScene("荒原站交易所购买", Site.WILDERNESS_STATION)
+onederland_exchange_buy = ExchangeBuyScene("淘金乐园交易所购买", Site.ONEDERLANND)
+clarity_data_center_exchange_buy = ExchangeBuyScene("澄明数据中心交易所购买", Site.CLARITY_DATA_CENTER)
+freeport_vii_exchange_buy = ExchangeBuyScene("7号自由港交易所购买", Site.FREEPORT_VII)
+anita_weapon_research_institute_exchange_buy = ExchangeBuyScene("阿妮塔战备工厂交易所购买", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
+anita_energy_research_institute_exchange_buy = ExchangeBuyScene("阿妮塔能源研究所交易所购买", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
+anita_rocket_base_exchange_buy = ExchangeBuyScene("阿妮塔发射中心交易所购买", Site.ANITA_ROCKET_BASE)
 
 
 exchange_buy_scenes = [
@@ -429,16 +420,16 @@ for exchange_scene in exchange_scenes:
 
 
 # -----------------交易所售出场景-----------------
-shoggolith_city_exchange_sell = ExchangeSellScene(29, "修格里城交易所售出", Site.SHOGGOLITH_CITY)
-brcl_outpost_exchange_sell = ExchangeSellScene(29, "铁盟哨站交易所售出", Site.BRCL_OUTPOST)
-mander_mine_exchange_sell = ExchangeSellScene(29, "曼德矿场交易所售出", Site.MANDER_MINE)
-wilderness_station_exchange_sell = ExchangeSellScene(29, "荒原站交易所售出", Site.WILDERNESS_STATION)
-onederland_exchange_sell = ExchangeSellScene(29, "淘金乐园交易所售出", Site.ONEDERLANND)
-clarity_data_center_exchange_sell = ExchangeSellScene(29, "澄明数据中心交易所售出", Site.CLARITY_DATA_CENTER)
-freeport_vii_exchange_sell = ExchangeSellScene(29, "7号自由港交易所售出", Site.FREEPORT_VII)
-anita_weapon_research_institute_exchange_sell = ExchangeSellScene(29, "阿妮塔战备工厂交易所售出", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
-anita_energy_research_institute_exchange_sell = ExchangeSellScene(29, "阿妮塔能源研究所交易所售出", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
-anita_rocket_base_exchange_sell = ExchangeSellScene(29, "阿妮塔发射中心交易所售出", Site.ANITA_ROCKET_BASE)
+shoggolith_city_exchange_sell = ExchangeSellScene("修格里城交易所售出", Site.SHOGGOLITH_CITY)
+brcl_outpost_exchange_sell = ExchangeSellScene("铁盟哨站交易所售出", Site.BRCL_OUTPOST)
+mander_mine_exchange_sell = ExchangeSellScene("曼德矿场交易所售出", Site.MANDER_MINE)
+wilderness_station_exchange_sell = ExchangeSellScene("荒原站交易所售出", Site.WILDERNESS_STATION)
+onederland_exchange_sell = ExchangeSellScene("淘金乐园交易所售出", Site.ONEDERLANND)
+clarity_data_center_exchange_sell = ExchangeSellScene("澄明数据中心交易所售出", Site.CLARITY_DATA_CENTER)
+freeport_vii_exchange_sell = ExchangeSellScene("7号自由港交易所售出", Site.FREEPORT_VII)
+anita_weapon_research_institute_exchange_sell = ExchangeSellScene("阿妮塔战备工厂交易所售出", Site.ANITA_WEAPON_RESEARCH_INSTITUTE)
+anita_energy_research_institute_exchange_sell = ExchangeSellScene("阿妮塔能源研究所交易所售出", Site.ANITA_ENERGY_RESEARCH_INSTITUTE)
+anita_rocket_base_exchange_sell = ExchangeSellScene("阿妮塔发射中心交易所售出", Site.ANITA_ROCKET_BASE)
 
 
 exchange_sell_scenes = [
