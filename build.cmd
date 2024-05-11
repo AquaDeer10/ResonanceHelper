@@ -24,6 +24,6 @@ if not exist .venv (
 --add-data .\ocr\model;.\ocr\model ^
 --add-data .\adb.ini;. ^
 --icon .\icon\resonance.ico  ^
---name resonance-helper ^
+--name ResonanceHelper ^
 --noconsole ^
 --noconfirm
