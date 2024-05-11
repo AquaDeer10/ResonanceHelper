@@ -27,6 +27,7 @@ class Browser:
 
     def wait_for_info(self, interval_s: int=2) -> None:
         print("正在打开商会网页...")
+        print("首次打开商会网页可能会需要较长时间，请耐心等待...")
         try:
             self.driver.get(self.url)
             print("请将<来回>选项开启，并在配置好个人数据")
@@ -45,8 +46,10 @@ class Browser:
                 self.callback(info)
         except NoSuchWindowException:
             print("浏览器窗口已关闭")
+            self.callback(None)
         except Exception:
             traceback.print_exc()
+            self.callback(None)
         finally:
             if self._driver is not None:
                 self._driver.quit()

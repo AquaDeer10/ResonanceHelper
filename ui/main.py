@@ -494,8 +494,16 @@ class Application:
         self.browser_thread = threading.Thread(target=self.browser.wait_for_info)
         self.browser_thread.start()
         
+        self.start_browser_button.config(state=tk.DISABLED)
+        
 
     def browser_callback(self, info):
+        self.start_browser_button.config(state=tk.NORMAL)
+
+        if info is None:
+            print("未获取到信息, 请重试")
+            return
+
         src_info , dst_info = info
         src, src_goods, src_extra_goods_num = src_info
         dst, dst_goods, dst_extra_goods_num = dst_info
