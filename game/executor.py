@@ -6,15 +6,21 @@ from threading import Event
 import sys
 
 class Executor:
-    def __init__(self, event: Event, callback: t.Optional[t.Callable]=None) -> None:
+    def __init__(self) -> None:
         self._client: t.Optional[ADBClient] = None
+        self.event: t.Optional[Event] = None
+        self.callback: t.Optional[t.Callable] = None
+
+    def set_event(self, event: Event) -> None:
         self.event = event
+
+    def set_callback(self, callback: t.Callable) -> None:
         self.callback = callback
 
     @property
     def client(self) -> ADBClient:
         # 如果 event 被设置，则退出
-        if self.event.is_set():
+        if self.event is not None and self.event.is_set():
             if self.callback is not None:
                 self.callback()
             sys.exit(0)

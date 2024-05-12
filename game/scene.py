@@ -7,6 +7,8 @@ from PIL import Image
 from ocr import ocr
 import numpy as np
 
+from .data_types import *
+
 
 
 class Scene:
@@ -51,44 +53,25 @@ class Scene:
 
     
 class MainScene(Scene):
-    def __init__(self, 
-                 name: str, 
-                 site: Site
-                 ) -> None:
-        super().__init__(name, site)
-
+    pass
 
 
 class UrbanScene(Scene):
-    def __init__(self,
-                 name: str, 
-                 site: Site,
-                 ) -> None:
-        super().__init__(name, site)
+    pass
 
 
 class CRBSEScene(Scene):
-    def __init__(self,  
-                 name: str, 
-                 site: Site,
-                 ) -> None:
-        super().__init__(name, site)
+    pass
 
 class ExpulsionTaskScene(Scene):
-    def __init__(self,  
-                 name: str, 
-                 site: Site,
-                 ) -> None:
-        super().__init__(name, site)
-
-    def choose(self, task_number: int) -> Action:
-        if task_number not in [1, 2, 3]:
-            raise ValueError("task_number must be 1, 2 or 3")
+    def choose(self, task_index: ExpulsionIndex) -> Action:
+        if task_index not in [1, 2, 3]:
+            raise ValueError("task_index must be 1, 2 or 3")
         
-        print(f"选择驱逐任务{task_number}")
-        return action().tap(*getattr(position, f"expulsion_task_choose_{task_number}"))
+        print(f"选择驱逐任务{task_index}")
+        return action().tap(*getattr(position, f"expulsion_task_choose_{task_index}"))
     
-    def get_progress(self, image_bytes: bytes) -> t.Tuple[int, int, int]:
+    def get_progress(self, image_bytes: bytes) -> ExpulsionProgresses:
         image = Image.open(BytesIO(image_bytes))
         croped_image_1 = image.crop(position.expulsion_task_1_progress_rect)
         croped_image_2 = image.crop(position.expulsion_task_2_progress_rect)
@@ -103,13 +86,6 @@ class ExpulsionTaskScene(Scene):
        
 
 class ExchangeScene(Scene):
-    def __init__(self, 
-                 name: str, 
-                 site: Site,
-                 ) -> None:
-        super().__init__(name, site)
-
-
     def exchange_price(self) -> Action:
         return action().tap(*position.exchange_price)
     
@@ -244,10 +220,76 @@ class ExchangeSellScene(ExchangeScene):
 
     def local_item_warning_confirm(self) -> Action:
         return action().tap(*position.local_item_warning_confirm)
+    
+
+class ColumbaScene(Scene):
+    pass
+
+
+class ColumbaOrderScene(Scene):
+    def get_order_info(self, image_bytes: bytes) -> t.List[OrderInfo]:
+        order_result: t.List[OrderInfo] = []
+        image = Image.open(BytesIO(image_bytes))
+        croped_image = image.crop(position.order_info_rect)
+        result = ocr.detect(croped_image)
+        for item in result:
+            # 只看未接取的订单
+            x, y, name, _ = item
+
+            button_position = (x + position.order_info_rect[0], y + position.order_info_rect[1])
+
+            if "接取订单" not in name:
+                continue
+
+            dst_info_rect = (
+                x + position.order_destination_rect_offset[0], 
+                y + position.order_destination_rect_offset[1],
+                x + position.order_destination_rect_offset[2],
+                y + position.order_destination_rect_offset[3]
+            )
+            dst_croped_image = croped_image.crop(dst_info_rect)
+            dst_name, _ = ocr.recognize(dst_croped_image)
+
+            occupy_info_rect = (
+                x + position.order_occupy_rect_offset[0], 
+                y + position.order_occupy_rect_offset[1],
+                x + position.order_occupy_rect_offset[2],
+                y + position.order_occupy_rect_offset[3]
+            )
+            occupy_croped_image = croped_image.crop(occupy_info_rect)
+            occupy_str, _ = ocr.recognize(occupy_croped_image)
+            print(occupy_str)
+            if "座位" in occupy_str:
+                order_type = "客运"
+            elif "舱位" in occupy_str:
+                order_type = "货运"
+            else:
+                assert False, f"Unknown order type {occupy_str}"
+            
+            # 适配两种冒号的情况
+            if ":" in occupy_str:
+                occupy_size = int(occupy_str.split(":")[-1].strip())
+            else:
+                occupy_size = int(occupy_str.split("：")[-1].strip())
+
+
+            order_result.append((dst_name, button_position, order_type, occupy_size))
+        
+        return order_result
+    
+    def next_page(self) -> Action:
+        return action().swipe(*position.order_swipe)
+    
+
+    def accept_order(self) -> Action:
+        return action().tap(*position.accept_order)
+
 
 
             
-    
+
+
+
     
 # -----------------主界面场景-----------------
 shoggolith_city_main = MainScene("修格里城主界面", Site.SHOGGOLITH_CITY)
@@ -343,7 +385,7 @@ expulsion_task_scenes = [
 for crbse_scene in crbse_scenes:
     for expulsion_task_scene in expulsion_task_scenes:
         if crbse_scene.site == expulsion_task_scene.site:
-            crbse_scene.add_next_scene(expulsion_task_scene, action().tap(*position.expulsion_task))
+            crbse_scene.add_next_scene(expulsion_task_scene, action().tap(*position.menu_1))
             expulsion_task_scene.add_next_scene(crbse_scene, escape)
             break
 
@@ -446,6 +488,59 @@ for exchange_scene in exchange_scenes:
             exchange_scene.add_next_scene(exchange_sell_scene, action().tap(*position.sell))
             exchange_sell_scene.add_next_scene(exchange_scene, escape)
             break
+
+
+# -----------------商会场景-----------------
+shoggolith_city_columba = ColumbaScene("修格里城商会", Site.SHOGGOLITH_CITY)
+mander_mine_columba = ColumbaScene("曼德矿场商会", Site.MANDER_MINE)
+clarity_data_center_columba = ColumbaScene("澄明数据中心商会", Site.CLARITY_DATA_CENTER)
+freeport_vii_columba = ColumbaScene("7号自由港商会", Site.FREEPORT_VII)
+anita_rocket_base_columba = ColumbaScene("阿妮塔发射中心商会", Site.ANITA_ROCKET_BASE)
+
+columba_scenes = [
+    shoggolith_city_columba, mander_mine_columba, clarity_data_center_columba,
+    freeport_vii_columba, anita_rocket_base_columba
+]
+
+
+
+# TODO: 完善各城市商会坐标
+# 绑定 [市区->商会]
+freeport_vii_urban.add_next_scene(freeport_vii_columba, action().tap(*position.freeport_vii_columba))
+
+
+
+# 绑定 [商会->市区]
+for columba_scene in columba_scenes:
+    for urban_scene in urban_scenes:
+        if columba_scene.site == urban_scene.site:
+            columba_scene.add_next_scene(urban_scene, escape)
+            break
+
+
+
+# -----------------商会订单场景-----------------
+shoggolith_city_columba_order = ColumbaOrderScene("修格里城商会订单", Site.SHOGGOLITH_CITY)
+mander_mine_columba_order = ColumbaOrderScene("曼德矿场商会订单", Site.MANDER_MINE)
+clarity_data_center_columba_order = ColumbaOrderScene("澄明数据中心商会订单", Site.CLARITY_DATA_CENTER)
+freeport_vii_columba_order = ColumbaOrderScene("7号自由港商会订单", Site.FREEPORT_VII)
+anita_rocket_base_columba_order = ColumbaOrderScene("阿妮塔发射中心商会订单", Site.ANITA_ROCKET_BASE)
+
+columba_order_scenes = [
+    shoggolith_city_columba_order, mander_mine_columba_order, clarity_data_center_columba_order,
+    freeport_vii_columba_order, anita_rocket_base_columba_order
+]
+
+# 绑定 [商会->商会订单] [商会订单->商会]
+for columba_scene in columba_scenes:
+    for columba_order_scene in columba_order_scenes:
+        if columba_scene.site == columba_order_scene.site:
+            columba_scene.add_next_scene(columba_order_scene, action().tap(*position.menu_1))
+            columba_order_scene.add_next_scene(columba_scene, escape)
+            break
+
+
+
 
 
 if __name__ == '__main__':

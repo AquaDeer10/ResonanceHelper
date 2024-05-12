@@ -10,7 +10,6 @@ import time
 import typing as t
 
 
-
 class Site(Enum):
     SHOGGOLITH_CITY = "修格里城"
     BRCL_OUTPOST = "铁盟哨站"

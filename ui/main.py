@@ -1,12 +1,13 @@
-from game.helper import ResonanceHelper
+from game.helper import ResonanceHelper, ExchangeHelper, OrderHelper, ExpulsionHelper
 from web.browser import Browser
 import tkinter as tk
 from tkinter import ttk
 import threading
 import sys
 import typing as t
-from game.rail import Site
+from game.rail import Site, RailController
 from game.goods import GOODS_MAPPING, ALL_GOODS
+from game.executor import Executor
 from . import statics
 import os
 from PIL import Image
@@ -124,7 +125,15 @@ class Application:
         self.tray_thread: t.Optional[threading.Thread] = None
 
         # 助手初始化
-        self.helper = ResonanceHelper(self.helper_event, self.stop_callback)
+        self.helper: t.Optional[ResonanceHelper] = None
+
+        # 执行器初始化
+        self.executor = Executor()
+        self.executor.set_callback(self.stop_callback)
+        self.executor.set_event(self.helper_event)
+
+        # 行驶控制器初始化
+        self.rail_controller = RailController(self.executor)
 
         # 浏览器初始化
         self.browser = Browser(self.browser_event, self.browser_callback)
@@ -147,6 +156,17 @@ class Application:
         self.master.protocol("WM_DELETE_WINDOW", self.hide)
         self._close = False
         self._notified = False
+
+        # 测试
+        self.test_button = ttk.Button(self.down_frame, text="测试", command=self.test)
+        self.test_button.pack()
+
+
+    def test(self):
+        self.helper = OrderHelper(self.executor, self.rail_controller, self.helper_event)
+        self.helper_thread = threading.Thread(target=self.helper.run)
+        self.helper_thread.start()
+
 
     def create_src_and_dst(self, frame):
         # 左侧框架
@@ -449,6 +469,7 @@ class Application:
             return
         if not self.check_info():
             return
+        
         self.start_button.config(state=tk.DISABLED)
         self.helper_event.clear()
         src_info = (
@@ -465,8 +486,9 @@ class Application:
             self.dst_exchange_price_buy_num.get(),
             self.dst_exchange_price_sell_num.get()
         )
+        self.helper = ExchangeHelper(self.executor, self.rail_controller, self.helper_event)
         self.helper_thread = threading.Thread(
-            target=self.helper.exchange_task, 
+            target=self.helper.run, 
             args=(((src_info, dst_info,), ))
         )
         self.helper_thread.start()

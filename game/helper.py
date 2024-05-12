@@ -12,13 +12,18 @@ from . import position
 from .action import action
 from threading import Event
 import traceback
-import sys
+from abc import ABC, abstractmethod
 
-class ResonanceHelper:
-    def __init__(self, event: Event, callback: t.Optional[t.Callable]=None) -> None:
+from .data_types import *
+
+class ResonanceHelper(ABC):
+    def __init__(self, 
+                 executor: Executor,
+                 rail_controller: RailController,
+                 callback: t.Optional[t.Callable]=None) -> None:
         self._scene: t.Optional[scene.Scene] = None
-        self.executor = Executor(event, callback)
-        self.rail_controller = RailController(self.executor)
+        self.executor = executor
+        self.rail_controller = rail_controller
         self.callback = callback
         self.is_first_exchange = True
 
@@ -63,13 +68,13 @@ class ResonanceHelper:
             self._scene = next_scene
 
     def check_finished(self, 
-                       determining_criterion: t.Tuple[int, int, int, int, str], 
+                       determining_criterion: t.Tuple[Rect, str], 
                        interval_ms: int=3000, 
                        timeout_s: int=300
                        ) -> bool:
         start_time = time.time()
         while True:
-            *box, value = determining_criterion
+            box, value = determining_criterion
             image = Image.open(BytesIO(self.executor.screenshot()))
             croped_image = image.crop(box)
             text, _ = ocr.recognize(croped_image)
@@ -82,26 +87,18 @@ class ResonanceHelper:
             if time.time() - start_time > timeout_s:
                 print("超时")
                 return False
-        
-
-
-
-    def expultion_task(self, task_info: t.Tuple[str, int]):
-        self.check_scene()
-        site_name, num = task_info
-        route = self.bfs(f"{site_name}驱逐任务")
-        self.goto(route)
-        while True:
-            if isinstance(self._scene, scene.ExpulsionTaskScene):
-                self.executor.execute(self._scene.choose(num)) 
-                self.executor.execute(self._scene.start())
-                self.check_finished(position.battle_win_rect + ("作战胜利", ))
-                self.executor.execute(action().tap(*position.battle_end_next))
-                # 等待加载时间
-                time.sleep(5)
     
+    @abstractmethod
+    def run(self):
+        pass
 
-    def exchange_buy(self, site: Site, items: t.List[str], extra: int = 0, exchange_price_num: int = 0):
+
+class ExchangeHelper(ResonanceHelper):
+    def exchange_buy(self, 
+                     site: Site, 
+                     items: GoodsList, 
+                     extra: ExtraNum = 0, 
+                     exchange_price_num: ExchangePriceBuyNum = 0):
         route = self.bfs(f"{site.value}交易所购买")
         self.goto(route)
         if isinstance(self._scene, scene.ExchangeBuyScene):
@@ -147,7 +144,9 @@ class ResonanceHelper:
             self._scene = next_scene
 
 
-    def exchange_sell(self, site: Site, exchange_price_num: int = 0):
+    def exchange_sell(self, 
+                      site: Site, 
+                      exchange_price_num: ExchangePriceSellNum = 0):
         route = self.bfs(f"{site.value}交易所售出")
         self.goto(route)
         if isinstance(self._scene, scene.ExchangeSellScene):
@@ -177,24 +176,14 @@ class ResonanceHelper:
                     print("抬价次数已达上限，退出抬价")
                     break
 
-            # 直接全选售出，无需一个一个点击
-            '''
-            while not self._scene.check_empty(self.executor.screenshot()):
-                self.executor.execute(self._scene.select_item(10), 200)
-            '''
             self.executor.execute(self._scene.select_all())
             action, next_scene = self._scene.sell()
             self.executor.execute(action)
-            # 全选不包括本地物品，无需处理本地物品警告
-            '''
-            if self._scene.check_local_item_warning(self.executor.screenshot()):
-                self.executor.execute(self._scene.local_item_warning_confirm())
-            '''
             self.executor.execute(self._scene.close_form())
             self._scene = next_scene
             
 
-    def exchange_task(self, task_info: t.Tuple[t.Tuple[str, t.List[str], int, int, int], t.Tuple[str, t.List[str], int, int, int]]):
+    def run(self, task_info: ExchangeTask):
         try:
             self.check_scene()
             site_1, site_2 = task_info
@@ -208,10 +197,7 @@ class ResonanceHelper:
                 # 如果当前不在任务地点，先去任务地点
                 src = site_1
                 dst = site_2
-            
 
-
-            
             while True:
                 # 购买物品后会将物品移除列表，然后根据列表是否为空来判断是否继续购买
                 # 所以这里需要复制一份，以免第二次循环时物品列表为空
@@ -232,19 +218,94 @@ class ResonanceHelper:
             self.callback()
             self.executor.kill_client()
 
-    def black_tea_event_battle(self):
-        try:
-            while True:
-                balck_tea_event_position = (1348, 273)
-                self.executor.execute(action().tap(*balck_tea_event_position))
-                self.executor.execute(action().tap(*position.battle_confirm))
-                if self.check_finished(position.battle_win_rect + ("作战胜利", )):
-                    self.executor.execute(action().tap(*position.battle_end_next))
-                    time.sleep(5)
-        except Exception:
-            traceback.print_exc()
-            self.callback()
-            sys.exit(0)
 
+class ExpulsionHelper(ResonanceHelper):
+    def run(self, task_info: ExpulsionTask):
+        self.check_scene()
+        site_name, num = task_info
+        route = self.bfs(f"{site_name}驱逐任务")
+        self.goto(route)
+        while True:
+            if isinstance(self._scene, scene.ExpulsionTaskScene):
+                self.executor.execute(self._scene.choose(num)) 
+                self.executor.execute(self._scene.start())
+                self.check_finished(position.battle_win_rect + ("作战胜利", ))
+                self.executor.execute(action().tap(*position.battle_end_next))
+                # 等待加载时间
+                time.sleep(5)
+
+
+class OrderHelper(ResonanceHelper):
+
+    def __init__(self, 
+                 executor: Executor,
+                 rail_controller: RailController,
+                 callback: t.Optional[t.Callable]=None) -> None:
+
+            # 所有订单地点
+            self.order_scenes = scene.columba_order_scenes
+
+            # 已经接取的订单的目的地集合
+            self.order_destinations = set()
+
+            # 是否喝酒
+            self.drink_wine: bool = False
+
+            # 是否购买每日桦石
+            self.buy_daily_birch_stone: bool = False
+
+            # 是否购买每日星云物质
+            self.buy_daily_nebula_matter: bool = False
+
+            # 是否跑满订单
+            self.run_full: bool = False
+
+            super().__init__(executor, rail_controller, callback)
             
+    def set_drink_tea(self, drink_tea: bool):
+        self.drink_tea = drink_tea
+
+    def set_run_full(self, run_full: bool):
+        self.run_full = run_full
+
+    def set_buy_daily_birch_stone(self, bug_daily_birch_stone: bool):
+        self.bug_daily_birch_stone = bug_daily_birch_stone
+
+    def set_buy_daily_nebula_matter(self, buy_daily_nebula_matter: bool):
+        self.buy_daily_nebula_matter = buy_daily_nebula_matter
+
+
+    def run(self):
+        self.check_scene()
         
+        route = self.bfs(f"{self._scene.site.value}商会订单")
+        self.goto(route)
+
+        self.accept_orders()
+
+
+    def accept_orders(self):
+        if not isinstance(self._scene, scene.ColumbaOrderScene):
+            raise ValueError("当前不在订单界面")
+        
+        while True:
+            orders = self._scene.get_order_info(self.executor.screenshot())
+            if len(orders) == 0:
+                print("没有可接取订单")
+                break
+            
+            for order in orders:
+                dst_name, button_position, order_type, occupy_size = order
+                print(f"接取订单：{dst_name}，订单类型：{order_type}，占用：{occupy_size}")
+                
+                self.executor.execute(action().tap(*button_position))
+                self.executor.execute(self._scene.accept_order())
+
+                # TODO: 记录订单信息
+                
+            self.executor.execute(self._scene.next_page())
+
+    
+    def buy_daily_items(self):
+        # TODO: buy daily items
+        ...
