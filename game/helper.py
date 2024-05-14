@@ -257,13 +257,16 @@ class OrderHelper(ResonanceHelper):
             # 是否购买每日星云物质
             self.buy_daily_nebula_matter: bool = False
 
+            # 每日购买物品是否完成
+            self.buy_daily_items_complete: bool = False
+
             # 是否跑满订单
             self.run_full: bool = False
 
             super().__init__(executor, rail_controller, callback)
             
-    def set_drink_tea(self, drink_tea: bool):
-        self.drink_tea = drink_tea
+    def set_drink_wine(self, drink_wine: bool):
+        self.drink_wine = drink_wine
 
     def set_run_full(self, run_full: bool):
         self.run_full = run_full
@@ -307,5 +310,30 @@ class OrderHelper(ResonanceHelper):
 
     
     def buy_daily_items(self):
-        # TODO: buy daily items
-        ...
+        if self.buy_daily_items_complete:
+            # 如果已经购买完毕，则不执行后续购买操作
+            return
+        
+        # TODO: 判定当前城市是否存在休息区
+
+        if self.buy_daily_birch_stone:
+            self.do_buy_daily_birch_stone()
+
+        if self.buy_daily_nebula_matter:
+            self.do_buy_daily_nebula_matter()
+
+        self.buy_daily_items_complete = True
+
+    
+    def do_buy_daily_birch_stone(self):
+        route = self.bfs(f"{self._scene.site.value}休息区购买")
+        self.goto(route)
+
+        # TODO: 具体购买操作
+
+
+    def do_buy_daily_nebula_matter(self):
+        route = self.bfs(f"{self._scene.site.value}休息区购买")
+        self.goto(route)
+
+        # TODO: 具体购买操作
